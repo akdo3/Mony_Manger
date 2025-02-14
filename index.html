@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Money Manger Dashboard</title>
+    <link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+      crossorigin="anonymous" referrerpolicy="no-referrer" />
+      <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Cairo', sans-serif;
+        transition: all 0.3s ease;
+      }
+    
+      :root {
+        --primary: #4F46E5;
+        --secondary: #10B981;
+        --danger: #EF4444;
+        --dark: #1F2937;
+        --light: #F9FAFB;
+        --surface: #FFFFFF;
+        --text-primary: #111827;
+        --text-secondary: #6B7280;
+        --gradient-primary: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+        --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+        --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+        --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      [data-theme="dark"] {
+        --dark: #F9FAFB;
+        --light: #1F2937;
+        --surface: #374151;
+        --text-primary: #F9FAFB;
+        --text-secondary: #D1D5DB;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+        --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.3);
+      }
+
+      body {
+        background: var(--light);
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        min-height: 100vh;
+        color: var(--text-primary);
+      }
+    
+      .sidebar {
+        background: var(--surface);
+        padding: 1.5rem;
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
+        height: 100vh;
+        overflow-y: auto;
+      }
+    
+      .main-content {
+        padding: 2rem;
+        overflow-y: auto;
+        max-height: 100vh;
+      }
+    
+      .content-section {
+        animation: fadeInUp 0.4s ease forwards;
+        display: none;  opacity: 0;
+        transform: translateY(20px);
+      }
+    
+      .logo {
+        font-size: 1.75rem;
+        margin-bottom: 2.5rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--primary);
+      }
+    
+      .nav-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+    
+      .nav-item {
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.75rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+      }
+    
+      .nav-item:hover {
+        background: rgba(79, 70, 229, 0.08);
+        color: var(--primary);
+      }
+    
+      .nav-item.active {
+        background: var(--gradient-primary);
+        color: #fff;
+        box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.1);
+      }
+    
+      .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+    
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+    
+      .date-picker {
+        background: var(--surface);
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+    
+      .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+    
+      .summary-card {
+        background: var(--surface);
+        padding: 1.5rem;
+        border-radius: 1.5rem;
+        box-shadow: var(--shadow-md);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s var(--ease-out-quint);
+        border: 1px solid rgba(255,255,255,0.1);
+      }
+
+      .summary-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 24px -8px rgba(79, 70, 229, 0.2);
+      }
+
+      .summary-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--gradient-primary);
+      }
+
+      .summary-card::after {
+        content: "No financial data available";
+        display: none;
+        text-align: center;
+        color: var(--text-secondary);
+        padding: 2rem;
+      }
+    
+      .summary-card h3 {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+      }
+    
+      .summary-card h2 {
+        font-size: 1.75rem;
+        font-weight: 700;
+      }
+
+      .fab {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--gradient-primary);
+        box-shadow: var(--shadow-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s var(--ease-out-quint);
+        z-index: 100;
+      }
+
+      .fab:hover {
+        transform: scale(1.1) rotate(90deg);
+        box-shadow: 0 8px 24px rgba(79, 70, 229, 0.3);
+      }
+    
+      .transaction-controls {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+      }
+    
+      .search-bar {
+        flex: 1;
+        margin-right: 1rem;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 2rem;
+        background: var(--light);
+        color: var(--text-primary);
+        font-size: 0.95rem;
+      }
+    
+      .search-bar:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px var(--primary);
+      }
+    
+      .filter-options {
+        display: flex;
+        gap: 0.5rem;
+      }
+    
+      .filter-chip {
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        background: var(--light);
+        cursor: pointer;
+        font-size: 0.9rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+    
+      .filter-chip.active {
+        background: var(--gradient-primary);
+        color: #fff;
+      }
+    
+      .transaction-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0;
+      }
+    
+      .transaction-item {
+        background: var(--surface);
+        padding: 1rem;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .transaction-item:hover {
+        transform: scale(1.02);
+      }
+
+    
+      .transaction-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+      }
+    
+      .transaction-item-header div {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+    
+      .transaction-item-header h4 {
+        font-size: 1.1rem;
+      }
+    
+      .transaction-item-header small {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+      }
+    
+      .transaction-item-body {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+      }
+    
+      .transaction-item-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+      }
+    
+      .transaction-item button {
+        padding: 0.4rem 0.8rem;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        background: var(--gradient-primary);
+        color: #fff;
+        font-size: 0.8rem;
+      }
+    
+      button[id^="newTransactionBtn"] {
+        padding: 0.75rem 2rem;
+        background: var(--gradient-primary);
+        color: #fff;
+        border: none;
+        border-radius: 1rem;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+    
+      button[id^="newTransactionBtn"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+      }
+    
+      .export-options {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+    
+      .export-options button {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 0.75rem;
+        cursor: pointer;
+        background: var(--gradient-primary);
+        color: #fff;
+        font-weight: 600;
+      }
+    
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      }
+    
+      .modal-content {
+        background: var(--surface);
+        border-radius: 1rem;
+        width: 90%;
+        max-width: 500px;
+        padding: 2rem;
+        position: relative;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        animation: modalSlideIn 0.3s ease;
+      }
+    
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+    
+      .modal-header h2 {
+        font-size: 1.5rem;
+      }
+    
+      .close-btn {
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+    
+      .modal-form label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+    
+      .modal-form input,
+      .modal-form select {
+        width: 100%;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+      }
+    
+      .modal-form button {
+        width: 100%;
+        padding: 0.75rem;
+        background: var(--gradient-primary);
+        color: #fff;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+    
+      .toggle-group {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+    
+      .toggle-btn {
+        flex: 1;
+        padding: 0.75rem;
+        background: var(--light);
+        border: 1px solid #ccc;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+    
+      .toggle-btn.active {
+        background: var(--gradient-primary);
+        color: #fff;
+        border-color: var(--primary);
+      }
+    
+      .settings-card {
+        max-width: 500px;
+        margin: 2rem 0;
+        padding: 2rem;
+        background: var(--surface);
+        border-radius: 1.5rem;
+        box-shadow: var(--shadow-md);
+      }
+    
+      .settings-card label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+    
+      .settings-card input,
+      .settings-card select {
+        width: 100%;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+      }
+    
+      .settings-card button {
+        width: 100%;
+        padding: 0.75rem;
+        background: var(--gradient-primary);
+        border: none;
+        color: #fff;
+        font-size: 1rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+      }
+    
+      .setting-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        background: rgba(255,255,255,0.05);
+        border-radius: 1rem;
+        transition: all 0.3s ease;
+      }
+
+      .setting-item:hover {
+        transform: translateX(8px);
+      }
+
+      .color-picker {
+        display: flex;
+        gap: 0.75rem;
+      }
+
+      .color-option {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+      }
+
+      .color-option.active {
+        border-color: var(--text-primary);
+        transform: scale(1.1);
+      }
+
+      .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 48px;
+        height: 28px;
+      }
+
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--text-secondary);
+        transition: .4s;
+        border-radius: 34px;
+      }
+
+      .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 4px;
+        bottom: 4px;
+        background: var(--surface);
+        transition: .4s;
+        border-radius: 50%;
+      }
+
+      input:checked + .toggle-slider {
+        background: var(--primary);
+      }
+
+      input:checked + .toggle-slider:before {
+        transform: translateX(20px);
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+      }
+
+      .calculator-container,
+      .investment-container,
+      .goals-container {
+        max-width: 400px;
+        margin: 0 auto;
+      }
+    
+      #calcDisplay {
+        width: 100%;
+        padding: 1rem;
+        font-size: 1.5rem;
+        text-align: right;
+        margin-bottom: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 0.5rem;
+      }
+    
+      .calculator-buttons {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+      }
+    
+      .calc-btn {
+        padding: 1rem;
+        font-size: 1.2rem;
+        border: none;
+        border-radius: 0.5rem;
+        background: var(--light);
+        cursor: pointer;
+      }
+    
+      .calc-btn:hover {
+        background: #e0e0e0;
+      }
+    
+      .equal-btn {
+        grid-column: span 4;
+        background: var(--gradient-primary);
+        color: #fff;
+      }
+    
+      .equal-btn:hover {
+        background: var(--primary);
+      }
+    
+      .calculator-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+        max-width: 400px;
+        margin: 0 auto;
+      }
+
+      .investment-container form,
+      .goals-container form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+    
+      .investment-container input,
+      .goals-container input,
+      .investment-container select {
+        padding: 0.75rem;
+        font-size: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 0.5rem;
+      }
+    
+      .investment-container button,
+      .goals-container button {
+        padding: 0.75rem;
+        font-size: 1rem;
+        border: none;
+        border-radius: 0.5rem;
+        background: var(--gradient-primary);
+        color: #fff;
+        cursor: pointer;
+      }
+    
+      .goals-list {
+        margin-top: 1rem;
+      }
+    
+      .goal-item {
+        padding: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+    
+      .goal-item button {
+        padding: 0.25rem 0.5rem;
+        border: none;
+        border-radius: 0.25rem;
+        background: var(--danger);
+        color: #fff;
+        font-size: 0.8rem;
+        cursor: pointer;
+      }
+    
+      .chart-box {
+        min-height: 300px;
+        background: var(--surface);
+        border-radius: 1rem;
+        padding: 1rem;
+      }
+    
+      .chart-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+      }
+    
+      .chart-box canvas {
+        width: 100% !important;
+        max-height: 300px;
+      }
+    
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+    
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    
+      @keyframes ripple {
+        to {
+          transform: scale(2);
+          opacity: 0;
+        }
+      }
+    
+      @media (max-width: 768px) {
+        body {
+          grid-template-columns: 1fr;
+        }
+    
+        @keyframes modalSlideIn {
+          from { transform: translateY(-50px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+
+        .sidebar {
+          position: fixed;
+          width: 280px;
+          height: 100%;
+          left: -280px;
+          transition: transform 0.3s ease;
+        }
+    
+        .sidebar.active {
+          transform: translateX(280px);
+        }
+    
+        .mobile-menu-toggle {
+          display: block !important;
+        }
+      }
+    
+      .mobile-menu-toggle {
+        display: none;
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 1100;
+        background: var(--surface);
+        border: none;
+        padding: 0.75rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <button class="mobile-menu-toggle" id="mobileMenuToggle"><i class="fas fa-bars"></i></button>
+    <nav class="sidebar">
+      <div class="logo"><i class="fas fa-wallet"></i><span id="logoText">Money Manger</span></div>
+      <div class="nav-menu">
+        <div class="nav-item" data-section="dashboard" id="nav-dashboard"> 
+          <i class="fas fa-chart-pie"></i> 
+          <span class="nav-text">Dashboard</span> 
+        </div> 
+        <div class="nav-item" data-section="transactions" id="nav-transactions"> 
+          <i class="fas fa-exchange-alt"></i> 
+          <span class="nav-text">Transactions</span> 
+        </div> 
+        <div class="nav-item" data-section="analytics" id="nav-analytics"> 
+          <i class="fas fa-chart-line"></i> 
+          <span class="nav-text">Analytics</span> 
+        </div> 
+        <div class="nav-item" data-section="calculator" id="nav-calculator"> 
+          <i class="fas fa-calculator"></i> 
+          <span class="nav-text">Calculator</span> 
+        </div> 
+        <div class="nav-item" data-section="investment" id="nav-investment"> 
+          <i class="fas fa-dollar-sign"></i> 
+          <span class="nav-text">Investment</span> 
+        </div> 
+        <div class="nav-item" data-section="goals" id="nav-goals"> 
+          <i class="fas fa-bullseye"></i> 
+          <span class="nav-text">Goals</span> 
+        </div> 
+        <div class="nav-item" data-section="settings" id="nav-settings"> 
+          <i class="fas fa-cog"></i> 
+          <span class="nav-text">Settings</span> 
+        </div>         
+      </div>
+    </nav>
+    <main class="main-content">
+      <section id="dashboardSection" class="content-section">
+        <div class="dashboard-header">
+          <h1 id="dashboard-header-title">Dashboard</h1>
+          <div class="header-actions">
+            <div class="date-picker"><i class="fas fa-calendar-alt"></i><span
+                id="currentDate"></span></div>
+            <button class="theme-toggle" id="themeToggle"><i
+                class="fas fa-moon"></i></button>
+          </div>
+        </div>
+        <div class="summary-cards">
+          <div class="summary-card" id="totalBalanceCard">
+            <h3 id="totalBalanceLabel">Total Balance</h3>
+            <h2 id="totalBalanceAmount">$0.00</h2>
+          </div>
+          <div class="summary-card" id="thisMonthCard">
+            <h3 id="thisMonthLabel">This Month</h3>
+            <h2 id="thisMonthAmount" style="color: var(--primary)">+$0.00</h2>
+          </div>
+          <div class="summary-card" id="lastMonthCard">
+            <h3 id="lastMonthLabel">Last Month</h3>
+            <h2 id="lastMonthAmount" style="color: var(--danger)">-$0.00</h2>
+          </div>
+        </div>
+        <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+          <button id="newTransactionBtn">+ New Transaction</button>
+        </div>
+        <div class="chart-container">
+          <div class="chart-box"><canvas id="pieChart"></canvas></div>
+          <div class="chart-box"><canvas id="lineChart"></canvas></div>
+          <div class="chart-box"><canvas id="barChart"></canvas></div>
+        </div>
+        <div style="margin-top: 2rem;">
+          <h3>Recent Transactions</h3>
+          <div class="transaction-list" id="recentTransactionsList"></div>
+        </div>
+      </section>
+      <section id="transactionsSection" class="content-section"
+        style="display: none;">
+        <div class="dashboard-header">
+          <h1 id="transactions-header-title">Transactions</h1>
+          <div><button id="newTransactionBtnTrans">+ New Transaction</button></div>
+        </div>
+        <div class="transaction-controls">
+          <input type="text" class="search-bar" id="searchTransactions"
+            placeholder="Search transactions..." />
+          <div class="filter-options">
+            <div class="filter-chip active" id="filter-all">All</div>
+            <div class="filter-chip" id="income">Income</div>
+            <div class="filter-chip" id="expenses">Expenses</div>
+            <div class="filter-chip" id="filter-thisMonth">This Month</div>
+          </div>
+        </div>
+        <div class="transaction-list"></div>
+        <div class="export-options">
+          <button><i class="fas fa-file-csv"></i> Export CSV</button>
+          <button><i class="fas fa-print"></i> Print</button>
+        </div>
+      </section>
+      <section id="analyticsSection" class="content-section" style="display: none;">
+        <div class="dashboard-header">
+          <h1 id="analytics-header-title">Analytics</h1>
+          <div class="analytics-filters">
+            <input type="date" id="analyticsFromDate" placeholder="From Date">
+            <input type="date" id="analyticsToDate" placeholder="To Date">
+            <button id="applyAnalyticsFilter">Apply Filter</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <div class="chart-box"><canvas id="pieChartAnalytics"></canvas></div>
+          <div class="chart-box"><canvas id="lineChartAnalytics"></canvas></div>
+          <div class="chart-box"><canvas id="barChartAnalytics"></canvas></div>
+        </div>
+      </section>
+      <section id="settingsSection" class="content-section" style="display: none;">
+        <div class="dashboard-header">
+            <h1 id="settings-header-title">Settings</h1>
+          </div>
+          <div class="settings-card">
+            <form id="settingsForm">
+              <label id="labelLanguage" for="languageSelect">Language:</label>
+              <select id="languageSelect">
+                <option value="en">English</option>
+                <option value="ar">Arabic</option>
+              </select>
+              <button type="submit" id="saveSettingsBtn">Save Settings</button>
+            </form>
+          </div>
+        <div class="dashboard-header">
+            <h1 id="settings-header-title">Settings</h1>
+        </div>
+        <div class="settings-card">
+            <h3>Appearance</h3>
+            <div class="setting-item">
+                <div>
+                    <h4>Theme Color</h4>
+                    <p>Choose your accent color</p>
+                </div>
+                <div class="color-picker">
+                    <div class="color-option" style="background: #6366f1" data-color="indigo"></div>
+                    <div class="color-option" style="background: #10b981" data-color="emerald"></div>
+                    <div class="color-option" style="background: #f59e0b" data-color="amber"></div>
+                    <div class="color-option" style="background: #ec4899" data-color="pink"></div>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <div>
+                    <h4>Dark Mode</h4>
+                    <p>Enable dark theme</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="darkModeToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="settings-card">
+            <h3>Preferences</h3>
+            <div class="setting-item">
+                <div>
+                    <h4>Currency</h4>
+                    <p>Select default currency</p>
+                </div>
+                <select id="currencySelect" class="styled-select">
+                    <option value="USD">$ US Dollar</option>
+                    <option value="EUR">€ Euro</option>
+                    <option value="GBP">£ British Pound</option>
+                    <option value="JPY">¥ Japanese Yen</option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <div>
+                    <h4>Date Format</h4>
+                    <p>Choose date display format</p>
+                </div>
+                <select id="dateFormatSelect" class="styled-select">
+                    <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                    <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                    <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <div class="fab" id="globalFab">
+      <i class="fas fa-plus text-white"></i>
+    </div>
+
+      <section id="calculatorSection" class="content-section"
+        style="display: none;">
+        <div class="dashboard-header">
+          <h1 id="calculator-header-title">Calculator</h1>
+        </div>
+        <div class="calculator-container">
+          <input type="text" id="calcDisplay" readonly />
+          <div class="calculator-buttons">
+            <button class="calc-btn" data-value="7">7</button>
+            <button class="calc-btn" data-value="8">8</button>
+            <button class="calc-btn" data-value="9">9</button>
+            <button class="calc-btn" data-value="/">/</button>
+            <button class="calc-btn" data-value="4">4</button>
+            <button class="calc-btn" data-value="5">5</button>
+            <button class="calc-btn" data-value="6">6</button>
+            <button class="calc-btn" data-value="*">*</button>
+            <button class="calc-btn" data-value="1">1</button>
+            <button class="calc-btn" data-value="2">2</button>
+            <button class="calc-btn" data-value="3">3</button>
+            <button class="calc-btn" data-value="-">-</button>
+            <button class="calc-btn" data-value="0">0</button>
+            <button class="calc-btn" data-value=".">.</button>
+            <button class="calc-btn" data-value="C">C</button>
+            <button class="calc-btn" data-value="+">+</button>
+            <button class="calc-btn equal-btn" data-value="=">=</button>
+          </div>
+        </div>
+      </section>
+      <section id="investmentSection" class="content-section" style="display: none;">
+        <div class="dashboard-header">
+          <h1 id="investment-header-title">Investment Calculator</h1>
+        </div>
+        <div class="investment-container">
+          <form id="investmentForm">
+            <label for="principalInput">Principal Amount:</label>
+            <input type="number" id="principalInput" placeholder="Enter amount"
+              required />
+            <label for="interestInput">Annual Interest Rate (%):</label>
+            <input type="number" id="interestInput"
+              placeholder="Enter interest rate" required />
+            <label for="yearsInput">Years:</label>
+            <input type="number" id="yearsInput"
+              placeholder="Enter number of years" required />
+            <button type="submit" id="calcInvestmentBtn">Calculate</button>
+          </form>
+          <div id="investmentResult"
+            style="margin-top: 1rem; font-size: 1.2rem;"></div>
+        </div>
+      </section>
+      <section id="goalsSection" class="content-section" style="display: none;">
+        <div class="dashboard-header">
+          <h1 id="goals-header-title">Goal Tracker</h1>
+        </div>
+        <div class="goals-container">
+          <form id="goalForm">
+            <label for="goalName">Goal Name:</label>
+            <input type="text" id="goalName" placeholder="Enter goal name"
+              required />
+            <label for="goalTarget">Target Amount:</label>
+            <input type="number" id="goalTarget"
+              placeholder="Enter target amount" required />
+            <label for="goalDate">Target Date (optional):</label>
+            <input type="date" id="goalDate" />
+            <button type="submit" id="addGoalBtn">Add Goal</button>
+          </form>
+          <div class="goals-list" id="goalsList"></div>
+        </div>
+      </section>
+    </main>
+    <div id="transactionModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modalTitle">New Transaction</h2>
+          <span id="closeModal" class="close-btn">&times;</span>
+        </div>
+        <form id="transactionForm" class="modal-form">
+          <input type="hidden" id="transactionId" />
+          <label for="description" id="label" >Description:</label>
+          <input type="text" id="description" required />
+          <label for="date" id="labelDate">Date:</label>
+          <input type="date" id="date" />
+          <label for="transactionType" id="labelCategory">Type:</label>
+          <select id="transactionType">
+            <option value="income" id="income">Income</option>
+            <option value="expense" id="expenses">Expense</option>
+          </select>
+          <input type="hidden" id="category" value="Income" />
+          <label for="amount" id="labelAmount">Amount:</label>
+          <input type="number" id="amount" required />
+          <label for="status" id="labelStatus">Status:</label>
+          <select id="status">
+            <option value="Completed" id="Completed">Completed</option>
+            <option value="Pending" id="Pending">Pending</option>
+          </select>
+          <button type="submit" id="saveTransactionBtn">Save</button>
+        </form>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      document.querySelectorAll('.color-option').forEach(option => {
+        option.addEventListener('click', function() {
+          document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
+          this.classList.add('active');
+          const color = this.dataset.color;
+          document.documentElement.style.setProperty('--primary', `var(--${color})`);
+        });
+      });
+
+    document.getElementById('darkModeToggle').addEventListener('change', function() {
+      document.body.setAttribute('data-theme', this.checked ? 'dark' : 'light');
+    });
+
+    document.getElementById('settingsForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const settings = {
+        currency: document.getElementById('currencySelect').value,
+        dateFormat: document.getElementById('dateFormatSelect').value,
+        notifications: document.getElementById('notificationsToggle').checked,
+        reports: document.getElementById('reportsToggle').checked
+      };
+      localStorage.setItem('appSettings', JSON.stringify(settings));
+      alert('Settings saved successfully!');
+    });
+
+    document.getElementById('globalFab').addEventListener('click', () => {
+      openTransactionModal('new');
+      animateFab();
+    });
+
+    function animateFab() {
+      const fab = document.getElementById('globalFab');
+      fab.style.transform = 'scale(0.8)';
+      setTimeout(() => fab.style.transform = 'scale(1)', 200);
+    }
+
+    Chart.defaults.color = 'var(--text-secondary)';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.1)';
+
+    let currentLanguage = localStorage.getItem("language") || "en";
+    const translations = {
+      en: {
+        Completed: "Completed",
+        Pending: "Pending",
+        title: "Money Manger Dashboard",
+        navDashboard: "Dashboard",
+        navTransactions: "Transactions",
+        navAnalytics: "Analytics",
+        navSettings: "Settings",
+        navCalculator: "Calculator",
+        navInvestment: "Investment Calculator",
+        navGoals: "Goal Tracker",
+        dashboardHeader: "Dashboard",
+        totalBalance: "Total Balance",
+        thisMonth: "This Month",
+        lastMonth: "Last Month",
+        transactionsHeader: "Transactions",
+        newTransaction: "+ New Transaction",
+        filterAll: "All",
+        Income: "Income",
+        Expenses: "Expenses",
+        filterThisMonth: "This Month",
+        analyticsHeader: "Analytics",
+        searchTransactions: "Search Transactions...",
+        label: "Description:",
+        labelDate: "Date:",
+        labelCategory: "Category:",
+        labelAmount: "Amount:",
+        labelStatus: "Status:",
+        settingsHeader: "Settings",
+        labelLanguage: "Language:",
+        saveSettings: "Save Settings",
+        noTransactions: "No transactions found",
+        edit: "Edit",
+        delete: "Delete",
+        transactionDeleted: "Transaction deleted",
+        deleteConfirm: "Are you sure you want to delete this transaction?",
+        exportPDFMsg: "PDF export feature is not enabled. Integrate jsPDF to enable it.",
+        settingsSaved: "Settings saved successfully!",
+        calculatorHeader: "Calculator",
+        investmentHeader: "Investment Calculator",
+        goalsHeader: "Goal Tracker",
+        convert: "Convert",
+        conversionResult: "Result:",
+        labelGoalName: "Goal Name:",
+        labelGoalTarget: "Target Amount:",
+        labelGoalDate: "Target Date (optional):",
+        addGoal: "Add Goal",
+        goalAdded: "Goal added successfully!",
+        calcResult: "Result:",
+        noGoals: "No goals set",
+      },
+      ar: {
+        noGoals: "لا توجد أهداف",
+        Completed: "مكتمل",
+        Pending: "منتظر",
+        title: "لوحة Money Manger",
+        navDashboard: "الرئيسية",
+        navTransactions: "المعاملات",
+        navAnalytics: "التحليلات",
+        navSettings: "الإعدادات",
+        navCalculator: "الآلة الحاسبة",
+        navInvestment: "حاسبة الاستثمار",
+        navGoals: "متتبع الأهداف",
+        dashboardHeader: "الرئيسية",
+        totalBalance: "الرصيد الكلي",
+        thisMonth: "هذا الشهر",
+        lastMonth: "الشهر الماضي",
+        transactionsHeader: "المعاملات",
+        newTransaction: "+ معاملة جديدة",
+        filterAll: "الكل",
+        Income: "دخل",
+        Expenses: "مصروفات",
+        filterThisMonth: "هذا الشهر",
+        analyticsHeader: "التحليلات",
+        searchTransactions: "...بحث",
+        label: "الوصف:",
+        labelDate: "التاريخ:",
+        labelCategory: "الفئة:",
+        labelAmount: "المبلغ:",
+        labelStatus: "الحالة:",
+        settingsHeader: "الإعدادات",
+        labelLanguage: "اللغة:",
+        saveSettings: "حفظ الإعدادات",
+        noTransactions: "لا توجد معاملات",
+        edit: "تعديل",
+        delete: "حذف",
+        transactionDeleted: "تم حذف المعاملة",
+        deleteConfirm: "هل أنت متأكد من حذف هذه المعاملة؟",
+        exportPDFMsg: "ميزة تصدير PDF غير مفعلة. يمكنك دمج مكتبة jsPDF لتنفيذها.",
+        settingsSaved: "تم حفظ الإعدادات بنجاح!",
+        calculatorHeader: "الآلة الحاسبة",
+        investmentHeader: "حاسبة الاستثمار",
+        goalsHeader: "متتبع الأهداف",
+        convert: "حوّل",
+        conversionResult: "النتيجة:",
+        labelGoalName: "اسم الهدف:",
+        labelGoalTarget: "المبلغ المستهدف:",
+        labelGoalDate: "تاريخ الهدف (اختياري):",
+        addGoal: "أضف الهدف",
+        goalAdded: "تم إضافة الهدف بنجاح!",
+        calcResult: "النتيجة:"
+      }
+    };
+    let texts = translations;
+    let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+    let goals = JSON.parse(localStorage.getItem("goals")) || [];
+    function saveData() {
+      localStorage.setItem("transactions", JSON.stringify(transactions));
+      localStorage.setItem("goals", JSON.stringify(goals));
+      localStorage.setItem("language", currentLanguage);
+    }
+    document.getElementById("mobileMenuToggle").addEventListener("click", () => {
+      document.querySelector(".sidebar").classList.toggle("active");
+    });
+    document.querySelectorAll("button, .nav-item").forEach(btn => {
+      btn.addEventListener("click", function(e) {
+        let ripple = document.createElement("div");
+        ripple.style.cssText = "position: absolute; width: 20px; height: 20px; background: rgba(255,255,255,0.4); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; animation: ripple 0.6s linear;";
+        ripple.style.left = e.offsetX + "px";
+        ripple.style.top = e.offsetY + "px";
+        this.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
+      });
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.getElementById("transactionModal");
+  const closeModalBtn = document.getElementById("closeModal");
+  const transactionForm = document.getElementById("transactionForm");
+  const modalTitle = document.getElementById("modalTitle");
+  let editingTransactionId = null;
+  const toggleBtns = document.querySelectorAll(".toggle-btn");
+
+  function openTransactionModal(mode, txn = null) {
+    modal.style.display = "flex";
+    if (mode === "edit" && txn) {
+      modalTitle.textContent = texts[currentLanguage].modalEditTransaction || "Edit Transaction";
+      document.getElementById("transactionId").value = txn.id;
+      document.getElementById("description").value = txn.description;
+      document.getElementById("date").value = txn.date;
+      document.getElementById("category").value = txn.category;
+      toggleBtns.forEach(btn => { 
+        btn.classList.remove("active"); 
+        if (btn.getAttribute("data-type") === txn.category) {
+          btn.classList.add("active");
+        }
+      });
+      document.getElementById("amount").value = txn.amount;
+      document.getElementById("status").value = txn.status;
+      editingTransactionId = txn.id;
+    } else {
+      transactionForm.reset();
+      toggleBtns.forEach(btn => { btn.classList.remove("active"); });
+      editingTransactionId = null;
+    }
+  }
+
+  window.openTransactionModal = openTransactionModal;
+
+      document.getElementById("nav-analytics").addEventListener("click", () => {
+        updateCharts();
+      });
+      const navItems = document.querySelectorAll(".nav-item");
+      const sections = {
+        dashboard: document.getElementById("dashboardSection"),
+        transactions: document.getElementById("transactionsSection"),
+        analytics: document.getElementById("analyticsSection"),
+        calculator: document.getElementById("calculatorSection"),
+        investment: document.getElementById("investmentSection"),
+        goals: document.getElementById("goalsSection"),
+        settings: document.getElementById("settingsSection"),
+      };
+
+      sections.dashboard.style.display = "block";
+      document.getElementById("nav-dashboard").classList.add("active");
+
+      navItems.forEach(item => {
+        item.addEventListener("click", () => {
+          navItems.forEach(i => i.classList.remove("active"));
+          item.classList.add("active");
+
+          let sectionToShow = item.getAttribute("data-section");
+
+          for (let key in sections) {
+            if (sections[key]) {
+              sections[key].style.display = key === sectionToShow ? "block" : "none";
+            }
+          }
+
+          if (sectionToShow === "analytics" || sectionToShow === "dashboard") {
+            updateCharts();
+          }
+        });
+      });
+
+      if (sections.dashboard) {
+        sections.dashboard.style.display = "block";
+      }
+
+      setTimeout(() => {
+        updateCharts();
+        updateSummary();
+        renderTransactions();
+      }, 100);
+
+      document.getElementById("currentDate").textContent = new Date().toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+      });
+      function updateSummary() {
+        const totalBalanceCard = document.getElementById("totalBalanceAmount");
+        const thisMonthCard = document.getElementById("thisMonthAmount");
+        const lastMonthCard = document.getElementById("lastMonthAmount");
+        let total = 0, thisMonth = 0, lastMonth = 0;
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth();
+        const currentYear = currentDate.getFullYear();
+        const lastMonthDate = new Date(currentYear, currentMonth - 1, 1);
+        const lastMonthVal = lastMonthDate.getMonth();
+        const lastMonthYear = lastMonthDate.getFullYear();
+        transactions.forEach(txn => {
+          let value = txn.category === "Income" ? txn.amount : -txn.amount;
+          total += value;
+          if (txn.date) {
+            let txnDate = new Date(txn.date);
+            if (!isNaN(txnDate.getTime())) {
+              if (txnDate.getMonth() === currentMonth && txnDate.getFullYear() === currentYear) thisMonth += value;
+              if (txnDate.getMonth() === lastMonthVal && txnDate.getFullYear() === lastMonthYear) lastMonth += value;
+            }
+          }
+        });
+        totalBalanceCard.textContent = "$" + total.toFixed(2);
+        thisMonthCard.textContent = (thisMonth >= 0 ? "+" : "-") + "$" + Math.abs(thisMonth).toFixed(2);
+        lastMonthCard.textContent = (lastMonth >= 0 ? "+" : "-") + "$" + Math.abs(lastMonth).toFixed(2);
+      };
+
+      function renderTransactions(activeFilter = texts[currentLanguage].filterAll) {
+        const transactionList = document.querySelector("#transactionsSection .transaction-list");
+        const recentList = document.getElementById("recentTransactionsList");
+        transactionList.innerHTML = "";
+        recentList.innerHTML = "";
+        const searchText = document.querySelector(".search-bar").value.toLowerCase();
+        
+        const filtered = transactions.filter(txn => {
+          let txnDescription = (txn.description || "").toLowerCase();
+          let txnCategory = (txn.category || "").toLowerCase();
+          
+          let matchesSearch = txnDescription.includes(searchText);
+          let matchesFilter = activeFilter === texts[currentLanguage].filterAll ? true :
+            activeFilter === texts[currentLanguage].Income ? txnCategory.includes("income") :
+            activeFilter === texts[currentLanguage].Expenses ? txnCategory.includes("expense") :
+            activeFilter === texts[currentLanguage].filterThisMonth ? (
+              txn.date && new Date(txn.date).getMonth() === new Date().getMonth() &&
+              new Date(txn.date).getFullYear() === new Date().getFullYear()
+            ) : true;
+          return matchesSearch && matchesFilter;
+        });
+
+        if (filtered.length === 0) {
+          transactionList.innerHTML = `<p>${texts[currentLanguage].noTransactions}</p>`;
+          return;
+        }
+
+        filtered.forEach(txn => {
+          let item = document.createElement("div");
+          item.className = "transaction-item";
+          item.setAttribute("data-id", txn.id);
+          item.innerHTML = `
+            <div class="transaction-item-header">
+              <div>
+                <span class="category-tag" style="font-size: 1.25rem">
+                  ${txn.category === "Income" ? "💰" : "💸"}
+                </span>
+                <h4>${txn.description}</h4>
+              </div>
+              <small>${txn.date ? txn.date : ""}<br>${txn.timestamp ? new Date(txn.timestamp).toLocaleTimeString() : ""}</small>
+            </div>
+            <div class="transaction-item-body">
+              <span style="color: ${txn.category === "Income" ? "var(--primary)" : "var(--danger)"}">
+                ${txn.category === "Income" ? "+" : "-"}${"$"}${txn.amount.toLocaleString()}
+              </span><br>
+              <small>${txn.status}</small>
+            </div>
+            <div class="transaction-item-footer">
+              <button class="editBtn" data-id="${txn.id}">${texts[currentLanguage].edit}</button>
+              <button class="deleteBtn" data-id="${txn.id}">${texts[currentLanguage].delete}</button>
+            </div>
+          `;
+          item.querySelector(".editBtn").addEventListener("click", () => {
+            openTransactionModal("edit", txn);
+          });
+          item.querySelector(".deleteBtn").addEventListener("click", () => {
+            if (confirm(texts[currentLanguage].deleteConfirm)) {
+              deleteTransaction(txn.id);
+            }
+          });
+          transactionList.appendChild(item);
+        });
+
+        let recent = filtered.slice(0, 3);
+        recent.forEach(txn => {
+          let rItem = document.createElement("div");
+          rItem.className = "transaction-item";
+          rItem.style.padding = "0.5rem";
+          rItem.style.fontSize = "0.9rem";
+          rItem.style.color = txn.category === "Income" ? "green" : "red";
+          rItem.innerHTML = `<strong>${txn.description}</strong> 
+            <span style="color: ${txn.category === "Income" ? "green" : "red"};">
+              ${txn.category === "Income" ? "+" : "-"}$${txn.amount.toFixed(2)}
+            </span>`;
+          recentList.appendChild(rItem);
+        });
+      }
+      document.getElementById("globalFab").addEventListener("click", () => { 
+        openTransactionModal("new"); 
+      });
+      let pieChartInstance, lineChartInstance, barChartInstance;
+      function updateCharts() {
+        let analyticsTransactions = [...transactions];
+        const fromDateVal = document.getElementById("analyticsFromDate")?.value;
+        const toDateVal = document.getElementById("analyticsToDate")?.value;
+        if (fromDateVal && toDateVal) {
+          const fromDate = new Date(fromDateVal);
+          const toDate = new Date(toDateVal);
+          analyticsTransactions = analyticsTransactions.filter(txn => {
+            if (txn.date) {
+              const txnDate = new Date(txn.date);
+              return txnDate >= fromDate && txnDate <= toDate;
+            }
+            return false;
+          });
+        }
+
+        if (window.pieChartInstance) window.pieChartInstance.destroy();
+        if (window.lineChartInstance) window.lineChartInstance.destroy();
+        if (window.barChartInstance) window.barChartInstance.destroy();
+
+        let incomeTotal = transactions
+          .filter(txn => txn.category === "Income")
+          .reduce((sum, txn) => sum + txn.amount, 0);
+        let expenseTotal = transactions
+          .filter(txn => txn.category === "Expenses")
+          .reduce((sum, txn) => sum + txn.amount, 0);
+
+        let dates = {};
+        transactions.forEach(txn => {
+          let key = txn.date ? txn.date : "No Date";
+          if (!dates[key]) dates[key] = 0;
+          dates[key] += txn.category === "Income" ? txn.amount : -txn.amount;
+        });
+        let sortedDates = Object.keys(dates).sort();
+
+        let monthlyTotals = {};
+        transactions.forEach(txn => {
+          if (txn.date) {
+            let d = new Date(txn.date);
+            let monthYear = (d.getMonth() + 1) + "/" + d.getFullYear();
+            if (!monthlyTotals[monthYear]) monthlyTotals[monthYear] = 0;
+            monthlyTotals[monthYear] += txn.category === "Income" ? txn.amount : -txn.amount;
+          }
+        });
+        let barLabels = Object.keys(monthlyTotals).sort();
+
+        const pieCtx = document.getElementById("pieChart")?.getContext("2d");
+        if (pieCtx) {
+          window.pieChartInstance = new Chart(pieCtx, {
+            type: "pie",
+            data: {
+              labels: ["Income", "Expenses"],
+              datasets: [{
+                data: [incomeTotal, expenseTotal],
+                backgroundColor: ["#10B981", "#EF4444"]
+              }]
+            }
+          });
+        }
+
+        let lineCtx = document.getElementById("lineChart")?.getContext("2d");
+        if (lineCtx) {
+          window.lineChartInstance = new Chart(lineCtx, {
+            type: "line",
+            data: {
+              labels: sortedDates,
+              datasets: [{
+                label: "Daily Balance Change",
+                data: sortedDates.map(date => dates[date]),
+                borderColor: "#6366F1",
+                fill: false
+              }]
+            }
+          });
+        }
+
+        let barCtx = document.getElementById("barChart")?.getContext("2d");
+        if (barCtx) {
+          window.barChartInstance = new Chart(barCtx, {
+            type: "bar",
+            data: {
+              labels: barLabels,
+              datasets: [{
+                label: "Monthly Net Change",
+                data: barLabels.map(label => monthlyTotals[label]),
+                backgroundColor: "#4F46E5"
+              }]
+            }
+          });
+        }
+
+        if (window.pieChartAnalyticsInstance) window.pieChartAnalyticsInstance.destroy();
+        if (window.lineChartAnalyticsInstance) window.lineChartAnalyticsInstance.destroy();
+        if (window.barChartAnalyticsInstance) window.barChartAnalyticsInstance.destroy();
+
+        let pieCtxAnalytics = document.getElementById("pieChartAnalytics")?.getContext("2d");
+        if (pieCtxAnalytics) {
+          window.pieChartAnalyticsInstance = new Chart(pieCtxAnalytics, {
+            type: "pie",
+            data: {
+              labels: ["Income", "Expenses"],
+              datasets: [{
+                data: [incomeTotal, expenseTotal],
+                backgroundColor: ["#10B981", "#EF4444"]
+              }]
+            }
+          });
+        }
+
+        let lineCtxAnalytics = document.getElementById("lineChartAnalytics")?.getContext("2d");
+        if (lineCtxAnalytics) {
+          window.lineChartAnalyticsInstance = new Chart(lineCtxAnalytics, {
+            type: "line",
+            data: {
+              labels: sortedDates,
+              datasets: [{
+                label: "Daily Balance Change",
+                data: sortedDates.map(date => dates[date]),
+                borderColor: "#6366F1",
+                fill: false
+              }]
+            }
+          });
+        }
+
+        let barCtxAnalytics = document.getElementById("barChartAnalytics")?.getContext("2d");
+        if (barCtxAnalytics) {
+          window.barChartAnalyticsInstance = new Chart(barCtxAnalytics, {
+            type: "bar",
+            data: {
+              labels: barLabels,
+              datasets: [{
+                label: "Monthly Net Change",
+                data: barLabels.map(label => monthlyTotals[label]),
+                backgroundColor: "#4F46E5"
+              }]
+            }
+          });
+        }
+      }
+      function addTransaction(txn) {
+        txn.timestamp = new Date().toISOString();
+        transactions.push(txn);
+        saveData();
+        updateSummary();
+        renderTransactions(document.querySelector(".filter-chip.active").textContent);
+        updateCharts();
+      }
+      function updateTransaction(updatedTxn) {
+        transactions = transactions.map(txn => txn.id === updatedTxn.id ? updatedTxn : txn);
+        saveData();
+        updateSummary();
+        renderTransactions(document.querySelector(".filter-chip.active").textContent);
+        updateCharts();
+      }
+      function deleteTransaction(id) {
+        transactions = transactions.filter(txn => txn.id !== id);
+        saveData();
+        updateSummary();
+        renderTransactions(document.querySelector(".filter-chip.active").textContent);
+        updateCharts();
+        alert(texts[currentLanguage].transactionDeleted);
+      }
+      toggleBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+          toggleBtns.forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          document.getElementById("category").value = btn.getAttribute("data-type");
+        });
+      });
+      function openTransactionModal(mode, txn = null) {
+        modal.style.display = "flex";
+        if (mode === "edit" && txn) {
+          modalTitle.textContent = texts[currentLanguage].modalEditTransaction;
+          document.getElementById("transactionId").value = txn.id;
+          document.getElementById("description").value = txn.description;
+          document.getElementById("date").value = txn.date;
+          document.getElementById("category").value = txn.category;
+          toggleBtns.forEach(btn => { btn.classList.remove("active"); if(btn.getAttribute("data-type") === txn.category) btn.classList.add("active"); });
+          document.getElementById("amount").value = txn.amount;
+          document.getElementById("status").value = txn.status;
+          editingTransactionId = txn.id;
+        } else {
+          transactionForm.reset();
+          toggleBtns.forEach(btn => { btn.classList.remove("active"); });
+          editingTransactionId = null;
+        }
+      }
+      function closeTransactionModal() { modal.style.display = "none"; }
+      closeModalBtn.addEventListener("click", closeTransactionModal);
+      window.addEventListener("click", event => { if (event.target === modal) closeTransactionModal(); });
+      transactionForm.addEventListener("submit", e => {
+        e.preventDefault();
+        let id = editingTransactionId
+          ? editingTransactionId
+          : transactions.length
+          ? Math.max(...transactions.map(t => t.id)) + 1
+          : 1;
+        let transactionType = document.getElementById("transactionType").value;
+
+        let dateValue = document.getElementById("date").value;
+        if (!dateValue) {
+          const now = new Date();
+          dateValue = now.toISOString().split("T")[0];
+        }
+        
+        let txn = {
+          id,
+          description: document.getElementById("description").value,
+          date: dateValue,
+          category: transactionType === 'income' ? 'Income' : (transactionType === 'expense' ? 'Expenses' : 'Unknown'),
+          amount: parseFloat(document.getElementById("amount").value),
+          status: document.getElementById("status").value
+        };
+        editingTransactionId ? updateTransaction(txn) : addTransaction(txn);
+        closeTransactionModal();
+      });
+      document.getElementById("newTransactionBtn").addEventListener("click", () => { openTransactionModal("new"); });
+      document.getElementById("newTransactionBtnTrans").addEventListener("click", () => { openTransactionModal("new"); });
+      document.getElementById("newTransactionBtn").addEventListener("click", () => { openTransactionModal("new"); });
+      document.querySelector(".search-bar").addEventListener("input", () => {
+        let activeChip = document.querySelector(".filter-chip.active");
+        renderTransactions(activeChip ? activeChip.textContent : texts[currentLanguage].filterAll);
+      });
+      document.querySelectorAll(".filter-chip").forEach(chip => {
+        chip.addEventListener("click", () => {
+          document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
+          chip.classList.add("active");
+          renderTransactions(chip.textContent);
+        });
+      });
+      document.querySelectorAll(".export-options button").forEach(button => {
+        button.addEventListener("click", e => {
+          let action = e.target.textContent.trim();
+          if (action.includes("CSV")) exportCSV();
+          else if (action.includes("PDF")) exportPDF();
+          else if (action.includes("Print")) window.print();
+        });
+      });
+      function exportCSV() {
+        let csvContent = "data:text/csv;charset=utf-8,ID,Date,Category,Description,Amount,Status\n";
+        transactions.forEach(txn => { csvContent += `${txn.id},${txn.date},${txn.category},${txn.description},${txn.amount},${txn.status}\n`; });
+        let encodedUri = encodeURI(csvContent);
+        let link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "transactions.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+      function exportPDF() { alert(texts[currentLanguage].exportPDFMsg); }
+      document.getElementById("settingsForm").addEventListener("submit", e => {
+        e.preventDefault();
+        let selectedLang = document.getElementById("languageSelect").value;
+        currentLanguage = selectedLang;
+        document.documentElement.lang = currentLanguage;
+        document.body.dir = currentLanguage === "ar" ? "rtl" : "ltr";
+        saveData();
+        updateSummary();
+        updateStaticTexts();
+        alert(texts[currentLanguage].settingsSaved);
+      });
+      var calcDisplay = document.getElementById("calcDisplay");
+      document.querySelectorAll(".calc-btn").forEach(btn => {
+        btn.addEventListener("click", function() {
+          let val = this.getAttribute("data-value");
+          if (val === "C") { calcDisplay.value = ""; }
+          else if (val === "=") {
+            try { calcDisplay.value = eval(calcDisplay.value); }
+            catch(e) { calcDisplay.value = "Error"; }
+          } else { calcDisplay.value += val; }
+        });
+      });
+      document.getElementById("investmentForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        let principal = parseFloat(document.getElementById("principalInput").value);
+        let interest = parseFloat(document.getElementById("interestInput").value);
+        let years = parseFloat(document.getElementById("yearsInput").value);
+        let result = principal * Math.pow(1 + interest/100, years);
+        document.getElementById("investmentResult").textContent = texts[currentLanguage].calcResult + " " + result.toFixed(2);
+      });
+      document.getElementById("goalForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        let name = document.getElementById("goalName").value;
+        let target = parseFloat(document.getElementById("goalTarget").value);
+        let date = document.getElementById("goalDate").value;
+        goals.push({ name, target, targetDate: date, timestamp: new Date().toISOString() });
+        updateGoals();
+        alert(texts[currentLanguage].goalAdded);
+        document.getElementById("goalForm").reset();
+        saveData();
+      });
+      function updateGoals() {
+        let container = document.getElementById("goalsList");
+        container.innerHTML = "";
+        if (goals.length === 0) {
+          container.innerHTML = `<p>${texts[currentLanguage].noGoals}</p>`;
+          return;
+        }
+        goals.forEach((goal, index) => {
+          let div = document.createElement("div");
+          div.className = "goal-item";
+          div.innerHTML = `<div><strong>${goal.name}</strong> - ${"$"}${goal.target.toFixed(2)}${goal.targetDate ? "<br><small>Target: " + goal.targetDate + "</small>" : ""}</div>
+                           <div>
+                             <button data-index="${index}" class="editGoalBtn">Edit</button>
+                             <button data-index="${index}" class="deleteGoalBtn">Delete</button>
+                           </div>`;
+          container.appendChild(div);
+        });
+        document.querySelectorAll(".deleteGoalBtn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            let idx = btn.getAttribute("data-index");
+            goals.splice(idx, 1);
+            saveData();
+            updateGoals();
+          });
+        });
+        document.querySelectorAll(".editGoalBtn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            let idx = btn.getAttribute("data-index");
+            let goal = goals[idx];
+            let newName = prompt("Edit Goal Name:", goal.name);
+            if(newName !== null) { goal.name = newName; }
+            let newTarget = prompt("Edit Target Amount:", goal.target);
+            if(newTarget !== null) { goal.target = parseFloat(newTarget); }
+            let newDate = prompt("Edit Target Date (YYYY-MM-DD) (optional):", goal.targetDate || "");
+            goal.targetDate = newDate;
+            goals[idx] = goal;
+            saveData();
+            updateGoals();
+          });
+        });
+      }
+      function updateStaticTexts() {
+        document.title = translations[currentLanguage].title;
+
+        document.querySelector("#nav-dashboard .nav-text").textContent = translations[currentLanguage].navDashboard;
+        document.querySelector("#nav-transactions .nav-text").textContent = translations[currentLanguage].navTransactions;
+        document.querySelector("#nav-analytics .nav-text").textContent = translations[currentLanguage].navAnalytics;
+        document.querySelector("#nav-settings .nav-text").textContent = translations[currentLanguage].navSettings;
+        document.querySelector("#nav-calculator .nav-text").textContent = translations[currentLanguage].navCalculator;
+        document.querySelector("#nav-investment .nav-text").textContent = translations[currentLanguage].navInvestment;
+        document.querySelector("#nav-goals .nav-text").textContent = translations[currentLanguage].navGoals;
+
+        document.getElementById("dashboard-header-title").textContent = translations[currentLanguage].dashboardHeader;
+        document.getElementById("totalBalanceLabel").textContent = translations[currentLanguage].totalBalance;
+        document.getElementById("thisMonthLabel").textContent = translations[currentLanguage].thisMonth;
+        document.getElementById("lastMonthLabel").textContent = translations[currentLanguage].lastMonth;
+        document.getElementById("transactions-header-title").textContent = translations[currentLanguage].transactionsHeader;
+        document.getElementById("newTransactionBtnTrans").textContent = translations[currentLanguage].newTransaction;
+        document.getElementById("analytics-header-title").textContent = translations[currentLanguage].analyticsHeader;
+        document.getElementById("settings-header-title").textContent = translations[currentLanguage].settingsHeader;
+        document.getElementById("labelLanguage").textContent = translations[currentLanguage].labelLanguage;
+        document.getElementById("saveSettingsBtn").textContent = translations[currentLanguage].saveSettings;
+        document.getElementById("filter-all").textContent = translations[currentLanguage].filterAll;
+        document.getElementById("income").textContent = translations[currentLanguage].Income;
+        document.getElementById("expenses").textContent = translations[currentLanguage].Expenses;
+        document.getElementById("filter-thisMonth").textContent = translations[currentLanguage].filterThisMonth;
+        document.getElementById("calculator-header-title").textContent = translations[currentLanguage].calculatorHeader;
+        document.getElementById("investment-header-title").textContent = translations[currentLanguage].investmentHeader;
+        document.getElementById("goals-header-title").textContent = translations[currentLanguage].goalsHeader;
+        document.getElementById("searchTransactions").setAttribute("placeholder", translations[currentLanguage].searchTransactions);
+        document.getElementById("Pending").textContent = translations[currentLanguage].Pending;
+        document.getElementById("Completed").textContent = translations[currentLanguage].Completed;
+        document.getElementById("labelDate").textContent = translations[currentLanguage].labelDate;
+        document.getElementById("label").textContent = translations[currentLanguage].label;
+        document.getElementById("labelCategory").textContent = translations[currentLanguage].labelCategory;
+        document.getElementById("labelAmount").textContent = translations[currentLanguage].labelAmount;
+        document.getElementById("labelStatus").textContent = translations[currentLanguage].labelStatus;
+      }
+
+      updateSummary();
+      renderTransactions();
+      updateGoals();
+      updateStaticTexts();
+    updateCharts();
+    });
+  </script>
+  </body>
+</html>
